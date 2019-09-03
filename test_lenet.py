@@ -50,13 +50,12 @@ from skimage.io import imread
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--datadir", type=str, help="path to png data directory.")
+    parser.add_argument("--dataset", type=str, help="path to png dataset directory.")
+
+    parser.add_argument("--datasetfile", type=str, help="path to dataset file.")
 
     parser.add_argument("--device", default="0",
                         help="ID of the device to use for computation.")
-
-    parser.add_argument("--batchsize", type=int, default=128,
-                        help="number of samples in one batch for fitting.")
 
     parser.add_argument("--mcsampling", type=int, default=30,
                         help="sampling of the mc posterior.")
@@ -67,7 +66,7 @@ if __name__ == "__main__":
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 
     # data directories
-    DATADIR = args.datadir
+    DATADIR = args.dataset
     TRAINDIR = os.path.join(DATADIR, 'Training')
     VALIDATIONDIR = os.path.join(DATADIR, 'Validation')
     TESTDIR = os.path.join(DATADIR, 'Test')
@@ -83,39 +82,39 @@ if __name__ == "__main__":
 
     # prediction output directory
     testoutputdir = os.path.join(DATADIR, 'TestOutputLenet')
-    os.makedirs(testoutputdir)
+    if not os.path.exists(testoutputdir):
+        os.makedirs(testoutputdir)
 
-    # get classnames (suffixes)
-    suffixes = [name for name in os.listdir(TESTDIR) if name[0] != '.' and os.path.isdir(os.path.join(TESTDIR, name))]
+    # get wsi basename for every suffixes
+    with open(os.path.join(args.datasetfile), "rb") as datasetfile:
+        datasets = pickle.load(datasetfile)
 
     # create a data generator with default parameters (no augmentation)`
-    def images():
-        for sufix in suffixes:
-            infolder = os.path.join(TESTDIR, sufix)
-            for name in os.listdir(infolder):
-                # name is a png filename
-                if name[0] != '.' and '.png' in name:
+    def images(classname, slidename):
+        infolder = os.path.join(TESTDIR, classname)
+        for name in os.listdir(infolder):
+            # name is a png filename
+            if name[0] != '.' and '.png' in name:
+                if slidename in name:
                     impath = os.path.join(infolder, name)
                     base = name[0:-len('.png')]
                     # yield basename of the file and image as numpy array
                     yield base, imread(impath)
 
     def batches():
-        # batches of images
-        # size is args.batchsize
-        batch = []
-        names = []
-        for name, image in images():
-            if len(batch) == args.batchsize:
+        # for each class
+        for classname in datasets:
+            # for each slidename in the test key
+            for slidepath in datasets[classname]['test']:
+                slidename, _ = os.path.splitext(os.path.basename(slidepath))
+                # batches of images
+                # size is args.batchsize
                 batch = []
                 names = []
-            batch.append(image)
-            names.append(name)
-            if len(batch) == args.batchsize:
-                yield names, batch
-        # yield potential remaining batch
-        if len(batch):
-            yield names, batch
+                for name, image in images(classname, slidename):
+                    batch.append(image)
+                    names.append(name)
+                yield slidename, names, batch
 
     # CODE TO RELOAD THE MODEL
 
@@ -144,12 +143,12 @@ if __name__ == "__main__":
     count = 0
 
     for batch in batches():
-        names, ims = batch
+        slide, slidenames, ims = batch
         inputs = preproc_xce(numpy.array(ims))
         predictions, stds = mc_dropout_predict(predictor, inputs)
-        outpath = os.path.join(testoutputdir, 'batch' + str(count) + '.p')
+        outpath = os.path.join(testoutputdir, str(slide) + ".p")
         with open(outpath, 'wb') as f:
             # every batch prediction is stored in a pickle file
-            pickle.dump({name: (pred, std) for name, pred, std in zip(names, predictions, stds)}, f)
+            pickle.dump({slidename: (pred, std) for slidename, pred, std in zip(slidenames, predictions, stds)}, f)
         count += 1
-        print(count * args.batchsize, ' images processed!')
+        print(count, ' WSI processed!')

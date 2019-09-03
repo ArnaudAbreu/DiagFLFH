@@ -42,7 +42,7 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--datadir", type=str, help="path to dataset directory.")
+    parser.add_argument("--data", type=str, help="path to dataset directory.")
 
     parser.add_argument("--train_ratio", type=float, default=0.50,
                         help="ratio training/total.")
@@ -62,10 +62,10 @@ if __name__ == "__main__":
     classdirs = []
 
     # first, get class folders and names
-    for name in os.listdir(args.datadir):
-        if name[0] != '.' and os.path.isdir(os.path.join(args.datadir, name)):
+    for name in os.listdir(args.data):
+        if name[0] != '.' and os.path.isdir(os.path.join(args.data, name)):
             classnames.append(name)
-            classdirs.append(os.path.join(args.datadir, name))
+            classdirs.append(os.path.join(args.data, name))
 
     # Then get class wsi files basenames
     datasets = {}
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         print("test size: ", len(splitted_datasets[classname]["test"]))
         print("-" * 20)
 
-    print("writing datasets summary at: ", os.path.join(args.datadir, 'dataset.p'))
+    print("writing datasets summary at: ", os.path.join(args.data, 'dataset.p'))
 
-    with open(os.path.join(args.datadir, 'dataset.p'), 'wb') as f:
+    with open(os.path.join(args.data, 'dataset.p'), 'wb') as f:
         pickle.dump(splitted_datasets, f)

@@ -178,7 +178,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--datadir", type=str, help="path to png data directory.")
+    parser.add_argument("--dataset", type=str, help="path to png dataset directory.")
 
     parser.add_argument("--device", default="0",
                         help="ID of the device to use for computation.")
@@ -197,7 +197,7 @@ if __name__ == "__main__":
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 
     # data directories
-    DATADIR = args.datadir
+    DATADIR = args.dataset
     TRAINDIR = os.path.join(DATADIR, 'Training')
     VALIDATIONDIR = os.path.join(DATADIR, 'Validation')
     TESTDIR = os.path.join(DATADIR, 'Test')

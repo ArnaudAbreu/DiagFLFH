@@ -5,7 +5,7 @@ Code related to submission of "Accurate diagnosis of lymphoma on whole slide his
 * Tensorflow >= 1.12.0
 * Keras >= 2.2.4
 * Scikit-image >= 0.14.12
-* Openslide-python >= 1.1.1 (RQ, should install openslide first, please visit https://www.google.com)
+* Openslide-python >= 1.1.1 (RQ, should install openslide first, please visit https://openslide.org/download/)
 * Tqdm >= 4.19.4 (for pretty progressbars)
 We mainly tested the code with this configuration, but other versions might work as well.
 # Data

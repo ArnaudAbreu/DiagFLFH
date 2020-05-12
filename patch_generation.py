@@ -39,7 +39,6 @@ import itertools
 #
 ########################################################################
 def get_tissue(image, blacktol=0, whitetol=230):
-
     """
     Given an image and a tolerance on black and white pixels,
     returns the corresponding tissue mask segmentation, i.e. true pixels

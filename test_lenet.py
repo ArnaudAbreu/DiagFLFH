@@ -34,6 +34,7 @@ import argparse
 import pickle
 import keras.backend as K
 from skimage.io import imread
+import errno
 
 ########################################################################
 #
